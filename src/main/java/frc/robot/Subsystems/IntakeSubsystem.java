@@ -61,6 +61,10 @@ public class IntakeSubsystem extends SubsystemBase {
     return 0;// needs conversion code!!!
   }
 
+  public static void setRollers(double speed){
+    IntakeRollers.set(speed);
+  }
+
   public static void configIntake(){
     IntakeShoulderConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     IntakeRollersConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;

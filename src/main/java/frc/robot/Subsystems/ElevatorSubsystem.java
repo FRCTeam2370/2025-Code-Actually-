@@ -31,15 +31,14 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public static double lastElevatorPosition; 
 
-  //creates a public enum that can have 4 different states of the elevator to corespond to different control modes
+  //creates a public enum that can have 3 different states of the elevator to corespond to different control modes
   public static enum ElevatorState {
-    GoingUp,
-    GoingDown,
+    Moving,
     Idle,
     HoldingPosition
   }
 
-  public static ElevatorState mElevatorState; 
+  public static ElevatorState mElevatorState = ElevatorState.Moving; 
 
   /** Creates a new ElevatorSubsystem. */
   public ElevatorSubsystem() {
@@ -53,6 +52,18 @@ public class ElevatorSubsystem extends SubsystemBase {
       KrakenToOutputShaft(elevatorMotor.getPosition().getValueAsDouble()));//sends the position of the elevator to the Dashboard
     
     SmartDashboard.putNumber("Elevator Voltage", elevatorMotor.getMotorVoltage().getValueAsDouble());
+
+    switch(mElevatorState) {
+      case Idle:
+        setElevatorPos(0.1);
+        if(KrakenToOutputShaft(elevatorMotor.getPosition().getValueAsDouble()) <= 0.11){
+          elevatorMotor.set(0);
+          break;
+        }
+        break;
+      case Moving:
+        break;
+    }
   }
 
   public static void setElevatorPos(double position){//PID control of the position of the elevator
