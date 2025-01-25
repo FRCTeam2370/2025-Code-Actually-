@@ -15,6 +15,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Commands.IntakeCommands.SetIntakePos;
 
 public class IntakeSubsystem extends SubsystemBase {
   public static TalonFX IntakeShoulder = new TalonFX(Constants.IntakeConstants.IntakeShoulderID);
@@ -26,6 +27,13 @@ public class IntakeSubsystem extends SubsystemBase {
   public static CANcoderConfiguration IntakeEncoderConfig = new CANcoderConfiguration();
 
   private static PositionDutyCycle ShoulderPosCycle = new PositionDutyCycle(0);
+
+  public static enum IntakeState{
+    HOLDINGPOS,
+    MOVING,
+  }
+
+  public static IntakeState mIntakeState = IntakeState.HOLDINGPOS;
 
   /** Creates a new IntakeSubsystem. */
   public IntakeSubsystem() {
@@ -39,6 +47,10 @@ public class IntakeSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("ShoulderEror", IntakeShoulder.getPosition().getValueAsDouble());
 
     SmartDashboard.putNumber("IntakeEncoder", IntakeEncoder.getAbsolutePosition().getValueAsDouble());
+
+    if(mIntakeState == IntakeState.HOLDINGPOS){
+      setShoulderPos(getShoulderPos());
+    }
   }
 
   public static void setShoulderPos(double position){
@@ -57,24 +69,30 @@ public class IntakeSubsystem extends SubsystemBase {
     return IntakeEncoder.getAbsolutePosition().getValueAsDouble();
   }
 
-  public static double CANcoderToFalcon(double CANcoderPos){
-    return 0;// needs conversion code!!!
-  }
-
   public static void setRollers(double speed){
     IntakeRollers.set(speed);
   }
 
+  private static double encoderTicksToRotations(double ticks){
+    double output = ticks / 4096;
+    return output;
+  } 
+
+  private static double encoderTicksToKraken(double ticks){
+    double output = encoderTicksToRotations(ticks) * 28;
+    return output;
+  }
+
   public static void configIntake(){
-    IntakeShoulderConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    IntakeShoulderConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     IntakeRollersConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-    IntakeShoulderConfig.Slot0.kP = 0.13;//You should probably set up some Gravity feedforward on this guy
+    IntakeShoulderConfig.Slot0.kP = 0.1;//You should probably set up some Gravity feedforward on this guy
     IntakeShoulderConfig.Slot0.kI = 0.03;
-    IntakeShoulderConfig.Slot0.kD = 0;
+    IntakeShoulderConfig.Slot0.kD = 0.01;
 
     IntakeRollersConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;//You definitely need to change these 
-    IntakeShoulderConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    IntakeShoulderConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     IntakeShoulder.setPosition(0);
     
