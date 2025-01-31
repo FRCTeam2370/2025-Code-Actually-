@@ -9,10 +9,13 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
+import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -29,13 +32,15 @@ import frc.robot.generated.TunerConstants;
 
 import frc.robot.Subsystems.ElevatorSubsystem;
 import frc.robot.Subsystems.IntakeSubsystem;
+import frc.robot.Subsystems.LimelightSubsystem;
 import frc.robot.Subsystems.ManipulatorSubsystem;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
-    private static PIDController drivePID = new PIDController(0.2, 0, 0);
+    private static SlewRateLimiter xLimiter = new SlewRateLimiter(6);
+    private static SlewRateLimiter yLimiter = new SlewRateLimiter(6);
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -43,6 +48,10 @@ public class RobotContainer {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+
+    private final SwerveRequest.RobotCentric driveRobot = new SwerveRequest.RobotCentric()
+    .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1)
+    .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
@@ -55,6 +64,9 @@ public class RobotContainer {
     private static ElevatorSubsystem mElevatorSubsystem = new ElevatorSubsystem();
     private static IntakeSubsystem mIntakeSubsystem = new IntakeSubsystem();
     private static ManipulatorSubsystem mManipulatorSubsystem = new ManipulatorSubsystem();
+    private static LimelightSubsystem mLimelightSubsystem = new LimelightSubsystem();
+
+    public static final PIDController limelightPID = new PIDController(0.55, 0, 0.005);
 
     public RobotContainer() {
         configureBindings();
@@ -66,8 +78,8 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                drive.withVelocityX(yLimiter.calculate(-joystick.getLeftY() * MaxSpeed)) // Drive forward with negative Y (forward)
+                    .withVelocityY(xLimiter.calculate(-joystick.getLeftX() * MaxSpeed)) // Drive left with negative X (left)
                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
@@ -76,6 +88,8 @@ public class RobotContainer {
         // joystick.b().whileTrue(drivetrain.applyRequest(() ->
         //     point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
         // ));
+
+        
 
         // reset the field-centric heading on left bumper press
         joystick.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
@@ -88,12 +102,13 @@ public class RobotContainer {
         driver.a().onTrue(new StowElevator(mElevatorSubsystem));
         driver.start().onTrue(new ElevatorControl(mElevatorSubsystem, 4.85));
 
-        driver.b().onTrue(new SetIntakePos(mIntakeSubsystem, 3.85));
-        driver.x().onTrue(new SetIntakePos(mIntakeSubsystem, 14.5));
+        // driver.b().onTrue(new SetIntakePos(mIntakeSubsystem, 3.85));
+        // driver.x().onTrue(new SetIntakePos(mIntakeSubsystem, 14.5));
 
         driver.leftTrigger().whileTrue(new RunIntakeRollers(mIntakeSubsystem, 0.5));
         driver.rightTrigger().whileTrue(new RunIntakeRollers(mIntakeSubsystem, -1));
 
+        driver.b().toggleOnTrue((drivetrain.applyRequest(() -> driveRobot.withVelocityX(yLimiter.calculate(-joystick.getLeftY() * MaxSpeed)).withVelocityY(limelightPID.calculate(LimelightSubsystem.getTx())))));
         //driver.rightBumper().toggleOnTrue(new ElevatorVoltage(mElevatorSubsystem, ()-> driver.getRawAxis(3)));
 
         driver.rightBumper().whileTrue(new SetManipulator(mManipulatorSubsystem, 1));
