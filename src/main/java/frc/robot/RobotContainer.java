@@ -97,10 +97,10 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
 
         //BUTTON BINDINGS YAY!!!
-        driver.leftBumper().onTrue(new ElevatorControl(mElevatorSubsystem, 2.65));//runs the Elevator at a constant percent speed -1.0 to 1.0 vals
-        driver.y().onTrue(new ElevatorControl(mElevatorSubsystem, 1.3));//runs the Elevator at a constant percent speed -1.0 to 1.0 vals
+        driver.leftBumper().onTrue(new ElevatorControl(mElevatorSubsystem, 2.65));//setpoints for the elevator: L3
+        driver.y().onTrue(new ElevatorControl(mElevatorSubsystem, 1.3));//setpoints for the elevator: L2
         driver.a().onTrue(new StowElevator(mElevatorSubsystem));
-        driver.start().onTrue(new ElevatorControl(mElevatorSubsystem, 4.85));
+        driver.start().onTrue(new ElevatorControl(mElevatorSubsystem, 4.85));//setpoints for the elevator: L4
 
         // driver.b().onTrue(new SetIntakePos(mIntakeSubsystem, 3.85));
         // driver.x().onTrue(new SetIntakePos(mIntakeSubsystem, 14.5));
