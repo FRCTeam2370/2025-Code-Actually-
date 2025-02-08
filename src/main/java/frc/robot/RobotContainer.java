@@ -20,13 +20,16 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Commands.SetManipulator;
+import frc.robot.Commands.ClimberCommands.ControlClimberManual;
+import frc.robot.Commands.ClimberCommands.SetClimberPos;
 import frc.robot.Commands.ElevatorCommands.ElevatorControl;
 import frc.robot.Commands.ElevatorCommands.IdleElevator;
 import frc.robot.Commands.ElevatorCommands.ManualElevatorControl;
 import frc.robot.Commands.ElevatorCommands.StowElevator;
 import frc.robot.Commands.IntakeCommands.RunIntakeRollers;
 import frc.robot.Commands.IntakeCommands.SetIntakePos;
+import frc.robot.Commands.ManipulatorCommands.SetManipulator;
+import frc.robot.Subsystems.ClimberSubsystem;
 import frc.robot.Subsystems.CommandSwerveDrivetrain;
 import frc.robot.generated.TunerConstants;
 
@@ -65,6 +68,7 @@ public class RobotContainer {
     private static IntakeSubsystem mIntakeSubsystem = new IntakeSubsystem();
     private static ManipulatorSubsystem mManipulatorSubsystem = new ManipulatorSubsystem();
     private static LimelightSubsystem mLimelightSubsystem = new LimelightSubsystem();
+    private static ClimberSubsystem mClimberSubsystem = new ClimberSubsystem();
 
     public static final PIDController limelightPID = new PIDController(0.55, 0, 0.005);
 
@@ -78,8 +82,8 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(yLimiter.calculate(-joystick.getLeftY() * MaxSpeed)) // Drive forward with negative Y (forward)
-                    .withVelocityY(xLimiter.calculate(-joystick.getLeftX() * MaxSpeed)) // Drive left with negative X (left)
+                drive.withVelocityX(yLimiter.calculate(-joystick.getLeftY() * MaxSpeed * 0.5)) // Drive forward with negative Y (forward)
+                    .withVelocityY(xLimiter.calculate(-joystick.getLeftX() * MaxSpeed * 0.5)) // Drive left with negative X (left)
                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
@@ -105,11 +109,16 @@ public class RobotContainer {
         // driver.b().onTrue(new SetIntakePos(mIntakeSubsystem, 3.85));
         // driver.x().onTrue(new SetIntakePos(mIntakeSubsystem, 14.5));
 
-        driver.leftTrigger().whileTrue(new RunIntakeRollers(mIntakeSubsystem, 0.5));
-        driver.rightTrigger().whileTrue(new RunIntakeRollers(mIntakeSubsystem, -1));
+        // driver.leftTrigger().whileTrue(new RunIntakeRollers(mIntakeSubsystem, 0.5));
+        // driver.rightTrigger().whileTrue(new RunIntakeRollers(mIntakeSubsystem, -1));
+
+        driver.rightTrigger().whileTrue(new ControlClimberManual(mClimberSubsystem, 0.25));
+        driver.leftTrigger().whileTrue(new ControlClimberManual(mClimberSubsystem, -0.25));
 
         driver.b().toggleOnTrue((drivetrain.applyRequest(() -> driveRobot.withVelocityX(yLimiter.calculate(-joystick.getLeftY() * MaxSpeed)).withVelocityY(limelightPID.calculate(LimelightSubsystem.getTx())))));
         //driver.rightBumper().toggleOnTrue(new ElevatorVoltage(mElevatorSubsystem, ()-> driver.getRawAxis(3)));
+
+        driver.x().onTrue(new SetClimberPos(1, mClimberSubsystem));
 
         driver.rightBumper().whileTrue(new SetManipulator(mManipulatorSubsystem, 1));
 

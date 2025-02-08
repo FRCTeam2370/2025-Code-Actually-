@@ -11,15 +11,20 @@ public final class Constants {
     }
 
     public static class IntakeConstants {
-        public static int IntakeShoulderID = 15;
-        public static int IntakeRollersID = 16;
-        public static int IntakeEncoderID = 19;
+        public static final int IntakeShoulderID = 15;
+        public static final int IntakeRollersID = 16;
+        public static final int IntakeEncoderID = 19;
 
         public static double IntakeEncoderOffset = 0.2;//Change this to what ever the offset is
     }
 
     public static class ManipulatorConstants {
-        public static int manipulatorDriverID = 17;
-        public static int manipulatorPassengerID = 18;
+        public static final int manipulatorDriverID = 17;
+        public static final int manipulatorPassengerID = 18;
+        public static final int manipulatorWristID = 20;
+    }
+
+    public static class ClimberConstants {
+        public static final int climberMotorID = 24;
     }
 }
