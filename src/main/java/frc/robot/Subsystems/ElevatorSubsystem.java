@@ -13,6 +13,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -95,9 +96,13 @@ public class ElevatorSubsystem extends SubsystemBase {
     elevatorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     //SLOT0 CONFIGURATION --- NORMAL PID CONTROL
-    elevatorConfiguration.Slot0.kP = 1.5;//needs more tunning with weight and maybe Motion Magic pls
+    elevatorConfiguration.Slot0.kP = 2.75;//needs more tunning with weight and maybe Motion Magic pls , 2.25
     elevatorConfiguration.Slot0.kI = 0;
-    elevatorConfiguration.Slot0.kD = 0.4;
+    elevatorConfiguration.Slot0.kD = 0.725;//0.62
+    elevatorConfiguration.Slot0.GravityType = GravityTypeValue.Elevator_Static;
+    elevatorConfiguration.Slot0.kG = 0.03;
+
+    elevatorConfiguration.ClosedLoopRamps.DutyCycleClosedLoopRampPeriod = 0;
 
     //SLOT1 CONFIGURATION --- MOTION MAGIC CONTROL
     var slot1Config = elevatorConfiguration.Slot1;

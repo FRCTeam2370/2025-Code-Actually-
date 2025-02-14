@@ -25,6 +25,7 @@ import frc.robot.Commands.ClimberCommands.SetClimberPos;
 import frc.robot.Commands.ElevatorCommands.ElevatorControl;
 import frc.robot.Commands.ElevatorCommands.IdleElevator;
 import frc.robot.Commands.ElevatorCommands.ManualElevatorControl;
+import frc.robot.Commands.ElevatorCommands.SetElevatorSpeed;
 import frc.robot.Commands.ElevatorCommands.StowElevator;
 import frc.robot.Commands.IntakeCommands.RunIntakeRollers;
 import frc.robot.Commands.IntakeCommands.SetIntakePos;
@@ -58,8 +59,8 @@ public class RobotContainer {
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    private final CommandXboxController joystick = new CommandXboxController(0);
-    private final CommandXboxController driver = joystick;
+    private static final CommandXboxController joystick = new CommandXboxController(0);
+    public static final CommandXboxController driver = joystick;
     private final CommandXboxController operator = new CommandXboxController(1);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
@@ -82,8 +83,8 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(yLimiter.calculate(-joystick.getLeftY() * MaxSpeed * 0.5)) // Drive forward with negative Y (forward)
-                    .withVelocityY(xLimiter.calculate(-joystick.getLeftX() * MaxSpeed * 0.5)) // Drive left with negative X (left)
+                drive.withVelocityX(yLimiter.calculate(-joystick.getLeftY() * MaxSpeed)) // Drive forward with negative Y (forward)
+                    .withVelocityY(xLimiter.calculate(-joystick.getLeftX() * MaxSpeed)) // Drive left with negative X (left)
                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
@@ -105,6 +106,7 @@ public class RobotContainer {
         driver.y().onTrue(new ElevatorControl(mElevatorSubsystem, 1.3));//setpoints for the elevator: L2
         driver.a().onTrue(new StowElevator(mElevatorSubsystem));
         driver.start().onTrue(new ElevatorControl(mElevatorSubsystem, 4.85));//setpoints for the elevator: L4
+        //driver.leftBumper().toggleOnTrue(new SetElevatorSpeed(mElevatorSubsystem));
 
         // driver.b().onTrue(new SetIntakePos(mIntakeSubsystem, 3.85));
         // driver.x().onTrue(new SetIntakePos(mIntakeSubsystem, 14.5));
@@ -112,8 +114,8 @@ public class RobotContainer {
         // driver.leftTrigger().whileTrue(new RunIntakeRollers(mIntakeSubsystem, 0.5));
         // driver.rightTrigger().whileTrue(new RunIntakeRollers(mIntakeSubsystem, -1));
 
-        driver.rightTrigger().whileTrue(new ControlClimberManual(mClimberSubsystem, 0.25));
-        driver.leftTrigger().whileTrue(new ControlClimberManual(mClimberSubsystem, -0.25));
+        driver.rightTrigger().whileTrue(new ControlClimberManual(mClimberSubsystem, 0.4));
+        driver.leftTrigger().whileTrue(new ControlClimberManual(mClimberSubsystem, -0.4));
 
         driver.b().toggleOnTrue((drivetrain.applyRequest(() -> driveRobot.withVelocityX(yLimiter.calculate(-joystick.getLeftY() * MaxSpeed)).withVelocityY(limelightPID.calculate(LimelightSubsystem.getTx())))));
         //driver.rightBumper().toggleOnTrue(new ElevatorVoltage(mElevatorSubsystem, ()-> driver.getRawAxis(3)));
